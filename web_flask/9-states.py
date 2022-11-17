@@ -1,31 +1,47 @@
 #!/usr/bin/python3
-""" a script that starts a flask web application"""
 from flask import Flask, render_template
 from models import storage
+
 
 app = Flask(__name__)
 
 
-@app.route("/states", strict_slashes=False)
-def states():
-    """Displays a HTML page with a list of all state objects in DBStorage"""
-    states = storage.all('State')
-    return render_template('9-states.html', states=states)
-
-
-@app.route("/states/<id>", strict_slashes=False)
-def states_id(id):
-    """Displays a HTML page with a list of info about <id> if it exists"""
-    for state in storage.all("State").values():
-        if state.id == id:
-            return render_template("9-states.html", state=state)
-    return render_template("9-states.html")
-
-
 @app.teardown_appcontext
-def teardown(self):
-    """ Removes the current SQLALchemy session"""
+def tear_down(self):
+    """tear down app context"""
     storage.close()
 
+
+@app.route('/states', strict_slashes=False)
+def list_all_states():
+    """lists states from database
+    Returns:
+        HTML
+    """
+    dict_states = storage.all(State)
+    all_states = []
+    for k, v in dict_states.items():
+        all_states.append(v)
+    return render_template('9-states.html', all_states=all_states)
+
+
+@app.route('/states/<id>', strict_slashes=False)
+def find_state(id):
+    """lists states from database with specific id
+    Args:
+        id (str): id
+    Returns:
+        HTML
+    """
+    dict_states = storage.all(State)
+    all_states = []
+    all_states_id = []
+    for k, v in dict_states.items():
+        all_states_id.append(v.id)
+        all_states.append(v)
+    return render_template('9-states.html', all_states=all_states,
+                           all_states_id=all_states_id, id=id)
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    app.run(host='0.0.0.0', port=5000)
